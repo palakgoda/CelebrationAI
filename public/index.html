@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CelebrationAI – Indian Celebration & Wedding Planner</title>
+    <meta
+      name="description"
+      content="GenAI-powered celebration and event planner for Indian families organizing weddings, birthdays, and community events with budgets, timelines, and vendor checklists."
+    />
+    <meta property="og:title" content="CelebrationAI – Indian Celebration & Wedding Planner" />
+    <meta
+      property="og:description"
+      content="GenAI-powered celebration and event planner for Indian families organizing weddings, birthdays, and community events with budgets, timelines, and vendor checklists."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <!-- Accessibility: Skip Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Top Navigation (Strict 3-Zone Top Bar Contract) -->
+    <header class="site-header" role="banner">
+      <div class="container header-inner">
+        <!-- Zone 1: Wordmark -->
+        <a href="/" class="brand-wordmark" aria-label="CelebrationAI Home">
+          Celebration<span>AI</span>
+        </a>
+
+        <!-- Zone 2: Navigation Links -->
+        <nav class="header-nav" role="navigation" aria-label="Main Navigation">
+          <a href="#planner-form" class="nav-link">Plan Event</a>
+          <a href="#results-section" id="nav-link-checklists" class="nav-link hidden">Checklists</a>
+          <a href="#about" class="nav-link">How it Works</a>
+        </nav>
+
+        <!-- Zone 3: Primary Action CTA -->
+        <div class="header-action">
+          <a href="#planner-form" class="btn-primary btn-sm">Plan my event</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Landmark -->
+    <main id="main-content" role="main">
+      <!-- Hero Section (Two Columns on Desktop, Stacked on Mobile) -->
+      <section class="hero-section" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="hero-grid">
+            <!-- Left Column: Copy & Actions -->
+            <div class="hero-content">
+              <h1 id="hero-title" class="hero-headline">
+                Plan celebrations that feel heartfelt and stay on budget.
+              </h1>
+              <p class="hero-copy">
+                Budgets, timelines, and localized vendor checklists for weddings, birthdays, and community gatherings across India.
+              </p>
+              <div class="hero-actions">
+                <a href="#planner-form" class="btn-primary">Plan my event</a>
+                <button type="button" id="btn-sample-wedding" class="btn-secondary">
+                  Try a sample wedding
+                </button>
+              </div>
+              <div class="preset-strip" aria-label="Quick Demo Presets">
+                <span>Quick demo presets:</span>
+                <button type="button" id="btn-sample-birthday" class="preset-chip-btn">
+                  10th Birthday (Bengaluru · ₹65k)
+                </button>
+                <button type="button" id="btn-sample-community" class="preset-chip-btn">
+                  Community Utsav (Pune · ₹2.5L)
+                </button>
+              </div>
+            </div>
+
+            <!-- Right Column: Static Preview Card of Sample Plan -->
+            <div class="hero-preview-wrapper">
+              <div
+                class="hero-preview-card"
+                id="hero-preview-card"
+                role="region"
+                aria-label="Sample ₹18,00,000 Wedding Plan Preview"
+                title="Click to load this sample wedding plan"
+              >
+                <div class="preview-badge-row">
+                  <span class="preview-tag">Sample Blueprint</span>
+                  <span class="preview-total tabular-nums">₹18,00,000</span>
+                </div>
+                <div class="preview-heading">Jaipur Heritage Wedding</div>
+                <div class="preview-sub tabular-nums">350 Guests · 3 Functions · Nov Season</div>
+
+                <div class="preview-budget-bars">
+                  <div class="preview-bar-row">
+                    <div class="preview-bar-meta">
+                      <span class="preview-bar-label">Catering & Live Chaat (32%)</span>
+                      <span class="preview-bar-amt tabular-nums">₹5,76,000</span>
+                    </div>
+                    <div class="preview-bar-track">
+                      <div class="preview-bar-fill" style="width: 64%"></div>
+                    </div>
+                  </div>
+
+                  <div class="preview-bar-row">
+                    <div class="preview-bar-meta">
+                      <span class="preview-bar-label">Venue & AC Mandap (22%)</span>
+                      <span class="preview-bar-amt tabular-nums">₹3,96,000</span>
+                    </div>
+                    <div class="preview-bar-track">
+                      <div class="preview-bar-fill" style="width: 44%"></div>
+                    </div>
+                  </div>
+
+                  <div class="preview-bar-row">
+                    <div class="preview-bar-meta">
+                      <span class="preview-bar-label">Decor & Fresh Florals (14%)</span>
+                      <span class="preview-bar-amt tabular-nums">₹2,52,000</span>
+                    </div>
+                    <div class="preview-bar-track">
+                      <div class="preview-bar-fill" style="width: 28%"></div>
+                    </div>
+                  </div>
+
+                  <div class="preview-bar-row">
+                    <div class="preview-bar-meta">
+                      <span class="preview-bar-label">Photo & 48-hr Reels (9%)</span>
+                      <span class="preview-bar-amt tabular-nums">₹1,62,000</span>
+                    </div>
+                    <div class="preview-bar-track">
+                      <div class="preview-bar-fill" style="width: 18%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="preview-timeline-snippet">
+                  <div class="preview-timeline-title">Key Milestones Working Backwards</div>
+                  <div class="preview-timeline-item">
+                    <span class="preview-dot"></span>
+                    <span><strong>150d prior:</strong> Lock Haveli venue & confirm Muhurat</span>
+                  </div>
+                  <div class="preview-timeline-item">
+                    <span class="preview-dot"></span>
+                    <span><strong>60d prior:</strong> Live food tasting & Sangeet choreography</span>
+                  </div>
+                  <div class="preview-timeline-item">
+                    <span class="preview-dot"></span>
+                    <span><strong>Day-of:</strong> Baraat Dhol procession & Varmala</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Planner Form Section -->
+      <section id="planner-form" class="form-section" aria-labelledby="form-section-title">
+        <div class="container">
+          <div class="section-kicker">Event Specifications</div>
+          <h2 id="form-section-title" class="section-main-title">Tell us about your celebration</h2>
+          <p class="section-subtitle">
+            We calculate realistic catering splits, backward-dated milestones, and local Indian vendor contracts.
+          </p>
+
+          <!-- Event Type Radio Group (Accessible with Keyboard Arrow-Keys) -->
+          <div
+            id="event-type-radiogroup"
+            class="event-type-grid"
+            role="radiogroup"
+            aria-label="Select Event Type"
+          >
+            <div
+              class="event-type-card selected"
+              role="radio"
+              aria-checked="true"
+              tabindex="0"
+              data-type="wedding"
+              id="radio-opt-wedding"
+            >
+              <div class="card-type-name">Wedding Celebration</div>
+              <div class="card-type-desc">
+                Multi-function weddings (Haldi, Mehendi, Sangeet, Shaadi & Reception) with mandap decor & catering.
+              </div>
+            </div>
+
+            <div
+              class="event-type-card"
+              role="radio"
+              aria-checked="false"
+              tabindex="-1"
+              data-type="birthday"
+              id="radio-opt-birthday"
+            >
+              <div class="card-type-name">Birthday Party</div>
+              <div class="card-type-desc">
+                Milestone birthdays, theme balloons, live snack counters, entertainment anchor & custom cake.
+              </div>
+            </div>
+
+            <div
+              class="event-type-card"
+              role="radio"
+              aria-checked="false"
+              tabindex="-1"
+              data-type="community"
+              id="radio-opt-community"
+            >
+              <div class="card-type-name">Community Utsav</div>
+              <div class="card-type-desc">
+                Diwali, Navratri, Pooja gatherings, shamiana pandals, Satvik Mahaprasad & volunteer coordination.
+              </div>
+            </div>
+          </div>
+
+          <!-- Planner Input Form -->
+          <form id="event-form" class="form-card" novalidate aria-describedby="form-error-banner">
+            <div class="form-grid">
+              <!-- Event Date -->
+              <div class="form-field">
+                <label for="input-date" class="form-label">Target Celebration Date *</label>
+                <input
+                  type="date"
+                  id="input-date"
+                  name="date"
+                  class="form-input"
+                  required
+                  aria-describedby="date-helper date-error"
+                />
+                <span id="date-helper" class="form-helper">Milestones work backwards from this date</span>
+                <span id="date-error" class="inline-error-msg hidden" role="alert"></span>
+              </div>
+
+              <!-- Guest Count -->
+              <div class="form-field">
+                <label for="input-guests" class="form-label">Estimated Guest Count *</label>
+                <input
+                  type="number"
+                  id="input-guests"
+                  name="guest_count"
+                  class="form-input tabular-nums"
+                  min="1"
+                  max="5000"
+                  placeholder="e.g. 350"
+                  required
+                  aria-describedby="guests-helper guests-error"
+                />
+                <span id="guests-helper" class="form-helper">Catering proportions scale with headcount</span>
+                <span id="guests-error" class="inline-error-msg hidden" role="alert"></span>
+              </div>
+
+              <!-- Total Budget in INR -->
+              <div class="form-field">
+                <label for="input-budget" class="form-label">Total Target Budget (₹ INR) *</label>
+                <input
+                  type="number"
+                  id="input-budget"
+                  name="total_budget"
+                  class="form-input tabular-nums"
+                  min="5000"
+                  max="500000000"
+                  step="1000"
+                  placeholder="e.g. 1800000"
+                  required
+                  aria-describedby="budget-live-helper budget-error"
+                />
+                <span id="budget-live-helper" class="form-helper highlight hidden tabular-nums" aria-live="polite"></span>
+                <span id="budget-error" class="inline-error-msg hidden" role="alert"></span>
+              </div>
+
+              <!-- Destination City -->
+              <div class="form-field">
+                <label for="input-city" class="form-label">City or Region in India *</label>
+                <input
+                  type="text"
+                  id="input-city"
+                  name="city"
+                  class="form-input"
+                  placeholder="e.g. Jaipur, Delhi-NCR, Mumbai, Bengaluru"
+                  required
+                  maxlength="100"
+                  aria-describedby="city-helper city-error"
+                />
+                <span id="city-helper" class="form-helper">Helps tailor seasonal florals & regional culinary highlights</span>
+                <span id="city-error" class="inline-error-msg hidden" role="alert"></span>
+              </div>
+
+              <!-- Wedding Functions Selector (Wedding only) -->
+              <div id="field-wedding-functions" class="form-field">
+                <label for="input-functions" class="form-label">Number of Wedding Functions</label>
+                <select id="input-functions" name="wedding_functions" class="form-select">
+                  <option value="1">1 Function (Ceremony & Reception combined)</option>
+                  <option value="2">2 Functions (Sangeet + Wedding)</option>
+                  <option value="3" selected>3 Functions (Haldi + Sangeet + Wedding)</option>
+                  <option value="4">4 Functions (Mehendi + Haldi + Sangeet + Wedding)</option>
+                  <option value="5">5 Functions (Extended Traditional Celebrations)</option>
+                </select>
+                <span class="form-helper">Adjusts per-function venue & stage decor allocations</span>
+              </div>
+
+              <!-- Style Notes & Preferences -->
+              <div class="form-field full-width">
+                <label for="input-notes" class="form-label">Preferences, Traditions, or Specific Ideas (Optional)</label>
+                <textarea
+                  id="input-notes"
+                  name="style_notes"
+                  class="form-textarea"
+                  maxlength="500"
+                  placeholder="e.g. Marwari Jain catering, pastel mandap with marigold accents, couple loves acoustic folk music"
+                ></textarea>
+                <span class="form-helper">Gemini enriches your plan based on these preferences</span>
+              </div>
+            </div>
+
+            <!-- Form Error Banner & Notice directly above Generate button -->
+            <div
+              id="form-error-banner"
+              class="form-error-banner hidden"
+              role="alert"
+              aria-live="assertive"
+            ></div>
+
+            <div class="form-actions">
+              <button type="submit" id="btn-submit-plan" class="btn-primary">
+                <span>Generate Celebration Plan</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Plan Results Section -->
+      <section id="results-section" class="results-section hidden" aria-labelledby="results-main-heading">
+        <div class="container">
+          <h2 id="results-main-heading" class="sr-only">Celebration Plan Details</h2>
+
+          <!-- Skeleton Loader -->
+          <div
+            id="plan-skeleton"
+            class="skeleton-box hidden"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line half"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line half"></div>
+          </div>
+
+          <!-- Dynamic Results Container -->
+          <div id="results-container" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Decision Architecture Section (4 Real-Number Cards) -->
+      <section id="about" class="form-section" aria-labelledby="about-heading">
+        <div class="container">
+          <div class="section-kicker">Cultural Logic</div>
+          <h2 id="about-heading" class="section-main-title">Decision Architecture for Indian Celebrations</h2>
+          <p class="section-subtitle">
+            Generic planners treat budgets as flat percentages. CelebrationAI is built around the mathematical and cultural realities of Indian family gatherings.
+          </p>
+
+          <div class="decision-cards-grid">
+            <!-- Card 1: Catering Scales Per Head -->
+            <div class="decision-card">
+              <h3 class="decision-card-title">Catering Scales Per Head</h3>
+              <p class="decision-card-sentence">
+                Fixed costs like decor and photography stay constant, while live food counters scale with every single guest plate.
+              </p>
+              <div class="decision-card-example">
+                <span class="decision-example-label">Concrete Example:</span>
+                At 350 guests, catering takes 32% (₹5,76,000 at ₹1,645/head). Increasing to 500 guests automatically expands catering to 36% (₹6,48,000 at ₹1,296/head) to protect multi-meal buffet standards.
+              </div>
+            </div>
+
+            <!-- Card 2: Muhurat-Aware Timeline -->
+            <div class="decision-card">
+              <h3 class="decision-card-title">Muhurat-Aware Timeline</h3>
+              <p class="decision-card-sentence">
+                Milestones calculate backwards from your date, automatically compressing lead times if your celebration falls in peak muhurat season.
+              </p>
+              <div class="decision-card-example">
+                <span class="decision-example-label">Concrete Example:</span>
+                For an event 45 days away, standard 150-day venue locks are compressed into a 48-hour urgent action tag with immediate caterer tasting alerts.
+              </div>
+            </div>
+
+            <!-- Card 3: Vendor Lead Times by Season -->
+            <div class="decision-card">
+              <h3 class="decision-card-title">Vendor Lead Times by Season</h3>
+              <p class="decision-card-sentence">
+                Prime Indian wedding dates between November and February book out 6 to 9 months in advance across major tier-1 and tier-2 cities.
+              </p>
+              <div class="decision-card-example">
+                <span class="decision-example-label">Concrete Example:</span>
+                Banquet halls and top bridal makeup artists demand 150-day lead times during peak season, compared to 45-day lead times for monsoon celebrations.
+              </div>
+            </div>
+
+            <!-- Card 4: Budget Realism Check -->
+            <div class="decision-card">
+              <h3 class="decision-card-title">Budget Realism Check</h3>
+              <p class="decision-card-sentence">
+                Automated thresholds detect unrealistic budgets per guest before you sign non-refundable vendor advances.
+              </p>
+              <div class="decision-card-example">
+                <span class="decision-example-label">Concrete Example:</span>
+                A wedding budget under ₹1,200/guest or 4+ functions under ₹2,500/head triggers an immediate advisory suggesting you host Haldi at home to save ₹60,000 in venue rent.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Follow-up Chat Assistant Button -->
+    <button
+      type="button"
+      id="chat-trigger-btn"
+      class="chat-trigger-btn hidden"
+      aria-label="Open Celebration Assistant"
+      aria-controls="chat-panel"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <span>Ask Advisor</span>
+    </button>
+
+    <!-- Chat Backdrop -->
+    <div id="chat-backdrop" class="chat-backdrop" aria-hidden="true"></div>
+
+    <!-- Chat Assistant Drawer / Side Panel -->
+    <aside
+      id="chat-panel"
+      class="chat-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="CelebrationAI Planning Assistant"
+      aria-hidden="true"
+    >
+      <div class="chat-header">
+        <h3 class="chat-title">CelebrationAI Advisor</h3>
+        <button
+          type="button"
+          id="chat-close-btn"
+          class="chat-close-btn"
+          aria-label="Close Chat Assistant"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div id="chat-messages" class="chat-messages" role="log" aria-live="polite"></div>
+
+      <form id="chat-form" class="chat-form">
+        <input
+          type="text"
+          id="chat-input"
+          class="chat-input"
+          placeholder="Ask about caterers, decor, or schedules..."
+          maxlength="500"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" class="chat-send-btn" aria-label="Send Question">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </form>
+    </aside>
+
+    <!-- Site Footer with Required Disclaimer Line -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="container footer-inner">
+        <div>CelebrationAI · Cultural Event Strategy & Budget Allocation</div>
+        <div class="footer-disclaimer">Suggestions are AI-generated estimates. Confirm prices with vendors.</div>
+        <div>All figures in Indian Rupees (INR) · Built for Indian Families</div>
+      </div>
+    </footer>
+
+    <!-- Main JS ES Module -->
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>
