@@ -4,7 +4,14 @@ Exported for Vercel serverless deployment and local uvicorn execution.
 """
 
 import os
+import mimetypes
 from pathlib import Path
+
+# Ensure correct MIME types on Windows (where .js registry key often defaults to text/plain)
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

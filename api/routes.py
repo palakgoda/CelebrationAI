@@ -7,7 +7,7 @@ Endpoints:
 Includes validation, caching, rate limiting, and friendly error handlers.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -40,7 +40,7 @@ async def health_check():
     client = get_gemini_client()
     return HealthResponse(
         status="ok",
-        timestamp=datetime.utcnow().isoformat() + "Z",
+        timestamp=datetime.now(timezone.utc).isoformat(),
         gemini_configured=client is not None,
         model=primary_model,
     )

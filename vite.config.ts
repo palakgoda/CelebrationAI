@@ -9,8 +9,9 @@ let fastApiProcess: ChildProcess | null = null;
 function startFastApiBackend() {
   if (fastApiProcess && !fastApiProcess.killed) return;
   console.log('[FastAPI] Spawning background uvicorn on port 5001...');
+  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
   fastApiProcess = spawn(
-    'python3',
+    pythonCmd,
     ['-m', 'uvicorn', 'api.index:app', '--host', '127.0.0.1', '--port', '5001', '--log-level', 'info'],
     {
       stdio: 'ignore',

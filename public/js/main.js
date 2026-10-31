@@ -50,7 +50,7 @@ function getIndianWordsHelper(num) {
   return "";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   loadSavedChecklist();
   initDateConstraints();
   initEventTypeRadiogroup();
@@ -78,7 +78,13 @@ document.addEventListener("DOMContentLoaded", () => {
   } catch (e) {
     console.warn("Could not parse saved plan", e);
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 /**
  * Set min on the date input to today and default to 90 days out
@@ -140,7 +146,15 @@ function initEventTypeRadiogroup() {
     }
   }
 
-  // Click handler
+  // Container delegation ensures clicks anywhere within card boundaries trigger selection
+  container.addEventListener("click", (e) => {
+    const card = e.target.closest(".event-type-card");
+    if (card && cards.includes(card)) {
+      selectCard(card, false);
+    }
+  });
+
+  // Direct click handler on each card
   cards.forEach((card) => {
     card.addEventListener("click", () => {
       selectCard(card, false);

@@ -5,6 +5,7 @@
  */
 
 import { state, toggleVendorTask, isVendorTaskChecked } from "./state.js";
+import { triggerCelebrationConfetti } from "./confetti.js";
 
 // Clean inline SVG icon helpers (No emojis)
 export const ICONS = {
@@ -16,6 +17,8 @@ export const ICONS = {
   sparkle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
   send: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
   download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
+  whatsapp: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`,
+  sliders: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>`,
   chat: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
   close: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
 };
@@ -36,6 +39,98 @@ export function formatDisplayDate(dateStr) {
   } catch (e) {
     return dateStr;
   }
+}
+
+/**
+ * Format number into Indian currency notation (₹12,34,567)
+ */
+export function formatINR(val) {
+  if (isNaN(val)) return "₹0";
+  const round = Math.round(val);
+  const s = String(Math.abs(round));
+  if (s.length <= 3) return `₹${s}`;
+  const last3 = s.slice(-3);
+  let rem = s.slice(0, -3);
+  const chunks = [];
+  while (rem.length > 0) {
+    chunks.push(rem.slice(-2));
+    rem = rem.slice(0, -2);
+  }
+  chunks.reverse();
+  return `₹${chunks.join(",")},${last3}`;
+}
+
+/**
+ * Real-Time Live Celebration Countdown Ticker
+ */
+function createCountdownTicker(targetDateStr) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "live-countdown-banner";
+  wrapper.id = "live-countdown-banner";
+
+  function updateTicker() {
+    if (!document.body.contains(wrapper)) {
+      if (window._celebrationCountdownTimer) {
+        clearInterval(window._celebrationCountdownTimer);
+        window._celebrationCountdownTimer = null;
+      }
+      return;
+    }
+    const target = new Date(`${targetDateStr}T09:00:00`);
+    const now = new Date();
+    const diff = target - now;
+
+    if (diff <= 0) {
+      wrapper.innerHTML = `
+        <div class="countdown-badge-pill">
+          <span class="pulsing-live-dot" aria-hidden="true"></span>
+          <span>Celebration Day Today!</span>
+        </div>
+        <div style="font-weight: 600; color: var(--accent-terracotta);">
+          🎉 Today is the auspicious day! Heartiest congratulations and best wishes!
+        </div>
+      `;
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
+
+    wrapper.innerHTML = `
+      <div class="countdown-badge-pill">
+        <span class="pulsing-live-dot" aria-hidden="true"></span>
+        <span>Real-Time Countdown</span>
+      </div>
+      <div class="countdown-digits-grid">
+        <div class="countdown-unit">
+          <span class="countdown-num tabular-nums">${days}</span>
+          <span class="countdown-lbl">Days</span>
+        </div>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num tabular-nums">${String(hours).padStart(2, "0")}</span>
+          <span class="countdown-lbl">Hours</span>
+        </div>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num tabular-nums">${String(mins).padStart(2, "0")}</span>
+          <span class="countdown-lbl">Mins</span>
+        </div>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num tabular-nums">${String(secs).padStart(2, "0")}</span>
+          <span class="countdown-lbl">Secs</span>
+        </div>
+      </div>
+    `;
+  }
+
+  updateTicker();
+  if (window._celebrationCountdownTimer) clearInterval(window._celebrationCountdownTimer);
+  window._celebrationCountdownTimer = setInterval(updateTicker, 1000);
+  return wrapper;
 }
 
 /**
@@ -67,6 +162,34 @@ export function renderResults(container, plan) {
   const actionsBlock = document.createElement("div");
   actionsBlock.className = "results-actions";
 
+  // 1-Click WhatsApp Event Summary Share
+  const whatsappBtn = document.createElement("button");
+  whatsappBtn.type = "button";
+  whatsappBtn.className = "btn-secondary btn-sm btn-whatsapp";
+  whatsappBtn.id = "btn-share-whatsapp";
+  whatsappBtn.innerHTML = `${ICONS.whatsapp}<span>WhatsApp Share</span>`;
+  whatsappBtn.addEventListener("click", () => {
+    const topCats = plan.budget.items
+      .slice(0, 3)
+      .map((it) => `• ${it.category}: ₹${Number(it.amount).toLocaleString("en-IN")} (${it.percentage}%)`)
+      .join("\n");
+    const topMilestones = plan.timeline
+      .slice(0, 2)
+      .map((m) => `• ${m.title} (${m.days_before === 0 ? "Day-of" : m.days_before + "d prior"})`)
+      .join("\n");
+
+    const message =
+      `✨ *${plan.city} ${eventName} Master Plan* ✨\n` +
+      `📅 *Date:* ${formatDisplayDate(plan.date)} (${plan.days_until_event} days to go)\n` +
+      `👥 *Guests:* ${plan.guest_count} | 💰 *Budget:* ${plan.total_budget_formatted} (${plan.per_guest_formatted}/guest)\n\n` +
+      `📊 *Top Allocations:*\n${topCats}\n\n` +
+      `⏳ *Key Milestones:*\n${topMilestones}\n\n` +
+      `Crafted with CelebrationAI: ${window.location.origin}`;
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  });
+
   const downloadBtn = document.createElement("button");
   downloadBtn.type = "button";
   downloadBtn.className = "btn-secondary btn-sm";
@@ -85,12 +208,20 @@ export function renderResults(container, plan) {
     if (form) form.scrollIntoView({ behavior: "smooth" });
   });
 
+  actionsBlock.appendChild(whatsappBtn);
   actionsBlock.appendChild(downloadBtn);
   actionsBlock.appendChild(resetBtn);
 
   actionHeader.appendChild(titleBlock);
   actionHeader.appendChild(actionsBlock);
   container.appendChild(actionHeader);
+
+  // Live Celebration Countdown Banner
+  const countdownBanner = createCountdownTicker(plan.date);
+  container.appendChild(countdownBanner);
+
+  // Trigger celebration confetti burst on result generation
+  triggerCelebrationConfetti();
 
   // 1b. Fallback Notice if Gemini enrichment is unavailable
   if (plan.ai_enriched === false || plan.is_fallback === true) {
@@ -262,7 +393,7 @@ export function renderResults(container, plan) {
 }
 
 /**
- * Render Budget Table & Visual Bars
+ * Render Budget Table & Visual Bars + Real-Time Interactive Reallocator
  */
 function renderBudgetSection(panel, budget) {
   panel.innerHTML = "";
@@ -281,9 +412,23 @@ function renderBudgetSection(panel, budget) {
   `;
   sectionCard.appendChild(header);
 
-  // Table
+  // View Switcher (Table vs Interactive Reallocator)
+  const viewSwitch = document.createElement("div");
+  viewSwitch.className = "budget-view-switch";
+  viewSwitch.innerHTML = `
+    <button type="button" class="view-switch-btn active" id="btn-budget-table-view">
+      <span>Standard Table</span>
+    </button>
+    <button type="button" class="view-switch-btn" id="btn-budget-slider-view">
+      ${ICONS.sliders}<span>Interactive Reallocator</span>
+    </button>
+  `;
+  sectionCard.appendChild(viewSwitch);
+
+  // VIEW 1: Standard Table
   const tableWrapper = document.createElement("div");
   tableWrapper.className = "table-responsive";
+  tableWrapper.id = "budget-table-wrapper";
 
   const table = document.createElement("table");
   table.className = "budget-table";
@@ -350,7 +495,203 @@ function renderBudgetSection(panel, budget) {
 
   tableWrapper.appendChild(table);
   sectionCard.appendChild(tableWrapper);
+
+  // VIEW 2: Real-Time Interactive Reallocator
+  const CATEGORY_COLORS = [
+    "#C04A26", // Terracotta
+    "#F59E0B", // Marigold
+    "#EAB308", // Gold
+    "#10B981", // Emerald
+    "#EC4899", // Rose
+    "#8B5CF6", // Jamun Purple
+    "#3B82F6", // Blue
+    "#14B8A6", // Teal
+    "#64748B", // Slate
+  ];
+
+  const reallocatorWrapper = document.createElement("div");
+  reallocatorWrapper.className = "reallocator-wrapper hidden";
+  reallocatorWrapper.id = "budget-reallocator-wrapper";
+
+  // Deep clone items for interactive slider state
+  const interactiveItems = budget.items.map((item, idx) => ({
+    ...item,
+    currentPct: item.percentage,
+    originalPct: item.percentage,
+    color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+  }));
+
+  // Stacked Bar Container
+  const stackedContainer = document.createElement("div");
+  stackedContainer.className = "reallocator-stacked-bar-container";
+
+  const stackedBar = document.createElement("div");
+  stackedBar.className = "reallocator-stacked-bar";
+  stackedBar.id = "reallocator-stacked-bar";
+
+  interactiveItems.forEach((it) => {
+    const seg = document.createElement("div");
+    seg.className = "reallocator-bar-segment";
+    seg.id = `bar-seg-${it.category.replace(/\s+/g, "-")}`;
+    seg.style.width = `${it.currentPct}%`;
+    seg.style.backgroundColor = it.color;
+    seg.title = `${it.category}: ${it.currentPct}%`;
+    stackedBar.appendChild(seg);
+  });
+  stackedContainer.appendChild(stackedBar);
+
+  // Status Banner
+  const statusBanner = document.createElement("div");
+  statusBanner.className = "reallocator-status-banner is-balanced";
+  statusBanner.id = "reallocator-status-banner";
+  stackedContainer.appendChild(statusBanner);
+
+  reallocatorWrapper.appendChild(stackedContainer);
+
+  // Sliders Grid
+  const slidersGrid = document.createElement("div");
+  slidersGrid.className = "reallocator-sliders-grid";
+
+  interactiveItems.forEach((it) => {
+    const card = document.createElement("div");
+    card.className = "reallocator-slider-card";
+
+    const top = document.createElement("div");
+    top.className = "slider-card-top";
+
+    const label = document.createElement("div");
+    label.className = "slider-card-label";
+    const dot = document.createElement("span");
+    dot.className = "slider-color-dot";
+    dot.style.backgroundColor = it.color;
+    label.appendChild(dot);
+    label.appendChild(document.createTextNode(it.category));
+
+    const valDisplay = document.createElement("div");
+    valDisplay.className = "slider-card-value tabular-nums";
+    valDisplay.id = `slider-val-${it.category.replace(/\s+/g, "-")}`;
+    valDisplay.textContent = formatINR((it.currentPct / 100) * budget.total_budget);
+
+    top.appendChild(label);
+    top.appendChild(valDisplay);
+    card.appendChild(top);
+
+    const controlRow = document.createElement("div");
+    controlRow.className = "slider-control-row";
+
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.className = "reallocator-range-slider";
+    slider.min = "1";
+    slider.max = "60";
+    slider.step = "0.5";
+    slider.value = String(it.currentPct);
+    slider.setAttribute("aria-label", `${it.category} allocation percentage`);
+
+    const sharePill = document.createElement("span");
+    sharePill.className = "slider-share-pill tabular-nums";
+    sharePill.id = `slider-pill-${it.category.replace(/\s+/g, "-")}`;
+    sharePill.textContent = `${it.currentPct.toFixed(1)}%`;
+
+    slider.addEventListener("input", (e) => {
+      it.currentPct = parseFloat(e.target.value);
+      sharePill.textContent = `${it.currentPct.toFixed(1)}%`;
+      valDisplay.textContent = formatINR((it.currentPct / 100) * budget.total_budget);
+      updateInteractiveReallocator();
+    });
+
+    controlRow.appendChild(slider);
+    controlRow.appendChild(sharePill);
+    card.appendChild(controlRow);
+
+    it._sliderElement = slider;
+    it._sharePillElement = sharePill;
+    it._valDisplayElement = valDisplay;
+
+    slidersGrid.appendChild(card);
+  });
+
+  reallocatorWrapper.appendChild(slidersGrid);
+
+  // Actions (Reset Button)
+  const actionsRow = document.createElement("div");
+  actionsRow.className = "reallocator-actions";
+  const resetAllocBtn = document.createElement("button");
+  resetAllocBtn.type = "button";
+  resetAllocBtn.className = "btn-secondary btn-sm";
+  resetAllocBtn.textContent = "Reset to Recommended Baseline";
+  resetAllocBtn.addEventListener("click", () => {
+    interactiveItems.forEach((it) => {
+      it.currentPct = it.originalPct;
+      if (it._sliderElement) it._sliderElement.value = String(it.originalPct);
+      if (it._sharePillElement) it._sharePillElement.textContent = `${it.originalPct.toFixed(1)}%`;
+      if (it._valDisplayElement) {
+        it._valDisplayElement.textContent = formatINR((it.originalPct / 100) * budget.total_budget);
+      }
+    });
+    updateInteractiveReallocator();
+  });
+  actionsRow.appendChild(resetAllocBtn);
+  reallocatorWrapper.appendChild(actionsRow);
+
+  sectionCard.appendChild(reallocatorWrapper);
   panel.appendChild(sectionCard);
+
+  function updateInteractiveReallocator() {
+    let totalPct = 0;
+    interactiveItems.forEach((it) => {
+      totalPct += it.currentPct;
+      const seg = document.getElementById(`bar-seg-${it.category.replace(/\s+/g, "-")}`);
+      if (seg) {
+        seg.style.width = `${it.currentPct}%`;
+        seg.title = `${it.category}: ${it.currentPct.toFixed(1)}%`;
+      }
+    });
+
+    const allocatedSum = (totalPct / 100) * budget.total_budget;
+    const diff = allocatedSum - budget.total_budget;
+
+    statusBanner.className = "reallocator-status-banner";
+    if (Math.abs(totalPct - 100) < 0.2) {
+      statusBanner.classList.add("is-balanced");
+      statusBanner.innerHTML = `
+        <span>✅ <strong>Balanced Allocation:</strong> 100% of target budget allocated (${formatINR(budget.total_budget)})</span>
+        <span class="tabular-nums">100%</span>
+      `;
+    } else if (totalPct > 100) {
+      statusBanner.classList.add("is-over");
+      statusBanner.innerHTML = `
+        <span>⚠️ <strong>Exceeds Target Budget:</strong> Total is ${formatINR(allocatedSum)} (+${formatINR(diff)} over target)</span>
+        <span class="tabular-nums font-bold">${totalPct.toFixed(1)}%</span>
+      `;
+    } else {
+      statusBanner.classList.add("is-under");
+      statusBanner.innerHTML = `
+        <span>💡 <strong>Contingency Reserve:</strong> ${formatINR(Math.abs(diff))} unallocated (${(100 - totalPct).toFixed(1)}% reserve buffer)</span>
+        <span class="tabular-nums font-bold">${totalPct.toFixed(1)}%</span>
+      `;
+    }
+  }
+
+  updateInteractiveReallocator();
+
+  // Switcher Click Handlers
+  const btnTable = viewSwitch.querySelector("#btn-budget-table-view");
+  const btnSliders = viewSwitch.querySelector("#btn-budget-slider-view");
+
+  btnTable.addEventListener("click", () => {
+    btnTable.classList.add("active");
+    btnSliders.classList.remove("active");
+    tableWrapper.classList.remove("hidden");
+    reallocatorWrapper.classList.add("hidden");
+  });
+
+  btnSliders.addEventListener("click", () => {
+    btnSliders.classList.add("active");
+    btnTable.classList.remove("active");
+    tableWrapper.classList.add("hidden");
+    reallocatorWrapper.classList.remove("hidden");
+  });
 }
 
 /**
@@ -585,6 +926,9 @@ function renderVendorsSection(panel, vendors) {
     const fill = document.getElementById("vendor-progress-fill");
     if (lbl) lbl.textContent = `${newChecked} of ${totalTasks} tasks completed (${pct}%)`;
     if (fill) fill.style.width = `${pct}%`;
+    if (pct === 100 && totalTasks > 0) {
+      triggerCelebrationConfetti();
+    }
   }
 }
 
