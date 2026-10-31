@@ -34,6 +34,11 @@
           <a href="#planner-form" class="nav-link">Plan Event</a>
           <a href="#results-section" id="nav-link-checklists" class="nav-link hidden">Checklists</a>
           <a href="#about" class="nav-link">How it Works</a>
+          <button type="button" id="btn-open-events-bin" class="nav-btn-events" aria-label="My Events and Recycle Bin">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>My Events</span>
+            <span id="events-badge-count" class="events-badge">0</span>
+          </button>
         </nav>
 
         <!-- Zone 3: Primary Action CTA -->
@@ -476,6 +481,102 @@
         <div>All figures in Indian Rupees (INR) · Built for Indian Families</div>
       </div>
     </footer>
+
+    <!-- My Events & Recycle Bin Modal -->
+    <div id="events-bin-backdrop" class="modal-backdrop hidden" aria-hidden="true"></div>
+    <div
+      id="events-bin-modal"
+      class="events-bin-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="events-bin-title"
+    >
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <h3 id="events-bin-title" class="modal-title">Celebration Manager</h3>
+        </div>
+        <button type="button" id="btn-close-events-modal" class="modal-close-btn" aria-label="Close Events Manager">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Modal Tabs: Active Events vs Recycle Bin -->
+      <div class="modal-tabs" role="tablist" aria-label="Events and Bin Tabs">
+        <button
+          type="button"
+          id="tab-btn-active-events"
+          class="modal-tab-btn is-active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="panel-active-events"
+        >
+          <span>Active Plans</span>
+          <span id="badge-active-events" class="tab-badge">0</span>
+        </button>
+        <button
+          type="button"
+          id="tab-btn-bin-events"
+          class="modal-tab-btn"
+          role="tab"
+          aria-selected="false"
+          aria-controls="panel-bin-events"
+        >
+          <span>Recycle Bin</span>
+          <span id="badge-bin-events" class="tab-badge">0</span>
+        </button>
+      </div>
+
+      <!-- Active Events Panel -->
+      <div id="panel-active-events" class="modal-tab-panel" role="tabpanel" aria-labelledby="tab-btn-active-events">
+        <div id="active-events-list" class="events-list-container"></div>
+        <div class="modal-bottom-actions">
+          <button type="button" id="btn-modal-create-new" class="btn-primary btn-sm">
+            <span>+ Plan Another Celebration</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Recycle Bin Panel (30-day auto-purge) -->
+      <div id="panel-bin-events" class="modal-tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-bin-events">
+        <div class="bin-info-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Events in the Recycle Bin are safely kept for <strong>30 days</strong>, after which they are permanently cleared. You can restore them anytime before then.</span>
+        </div>
+        <div id="bin-events-list" class="events-list-container"></div>
+        <div class="modal-bottom-actions">
+          <button type="button" id="btn-modal-empty-bin" class="btn-secondary btn-sm btn-danger-text">
+            <span>Empty Recycle Bin</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-backdrop" class="modal-backdrop hidden" aria-hidden="true"></div>
+    <div
+      id="delete-confirm-modal"
+      class="delete-confirm-modal hidden"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-confirm-title"
+      aria-describedby="delete-confirm-desc"
+    >
+      <div class="confirm-modal-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+      </div>
+      <h3 id="delete-confirm-title" class="confirm-title">Move Event to Recycle Bin?</h3>
+      <p id="delete-confirm-desc" class="confirm-desc">
+        Are you sure you want to delete this celebration plan? It will be moved to your <strong>Recycle Bin</strong> and safely retained for <strong>30 days</strong> before permanent removal.
+      </p>
+      <div class="confirm-actions">
+        <button type="button" id="btn-cancel-delete" class="btn-secondary btn-sm">Cancel</button>
+        <button type="button" id="btn-confirm-delete" class="btn-danger btn-sm">Move to Recycle Bin</button>
+      </div>
+    </div>
+
+    <!-- Floating Toast Notification with Undo Action -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <!-- Main JS ES Module -->
     <script type="module" src="/js/main.js"></script>

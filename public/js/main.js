@@ -10,9 +10,18 @@ import {
   state,
   loadSavedChecklist,
   savePlanToStorage,
+  getSavedEvents,
+  getBinEvents,
+  getDaysRemainingInBin,
+  moveToBin,
+  restoreFromBin,
+  deletePermanently,
+  emptyBin,
+  clearPlan,
   SAMPLE_PRESETS,
   getSampleFutureDate,
 } from "./state.js";
+import { triggerCelebrationConfetti } from "./confetti.js";
 
 // Format number to Indian numbering notation (₹18,00,000)
 function formatIndianCurrency(num) {
@@ -60,23 +69,30 @@ function initApp() {
   initSampleButtons();
   initKeyboardTabNavigation();
   initChatPanel();
+  initEventsManager();
 
-  // Check if saved plan exists in localStorage
+  // Restore latest active event if one exists in active saved events
   try {
-    const lastPlan = localStorage.getItem("celebration_ai_last_plan_v1");
-    if (lastPlan) {
-      const parsed = JSON.parse(lastPlan);
+    const activeEvents = getSavedEvents();
+    if (activeEvents.length > 0) {
+      const latest = activeEvents[0];
       const resultsContainer = document.getElementById("results-container");
-      if (parsed && resultsContainer) {
-        state.currentPlan = parsed;
-        renderResults(resultsContainer, parsed);
+      if (latest && latest.plan && resultsContainer) {
+        state.currentPlan = latest.plan;
+        state.currentEventId = latest.id;
+        renderResults(resultsContainer, latest.plan);
         document.getElementById("results-section")?.classList.remove("hidden");
         document.getElementById("chat-trigger-btn")?.classList.remove("hidden");
         document.getElementById("nav-link-checklists")?.classList.remove("hidden");
       }
+    } else {
+      // No active events, make sure results section stays hidden
+      document.getElementById("results-section")?.classList.add("hidden");
+      document.getElementById("chat-trigger-btn")?.classList.add("hidden");
+      document.getElementById("nav-link-checklists")?.classList.add("hidden");
     }
   } catch (e) {
-    console.warn("Could not parse saved plan", e);
+    console.warn("Could not load initial event", e);
   }
 }
 
@@ -618,3 +634,398 @@ function initChatPanel() {
     chatMessages?.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
   }
 }
+
+/**
+ * ============================================================================
+ * Event Manager & 30-Day Recycle Bin Controller
+ * ============================================================================
+ */
+let pendingDeletePlan = null;
+
+function updateEventsBadges() {
+  const activeEvents = getSavedEvents();
+  const binEvents = getBinEvents();
+
+  const navBadge = document.getElementById("events-badge-count");
+  if (navBadge) {
+    navBadge.textContent = String(activeEvents.length);
+    if (activeEvents.length > 0) {
+      navBadge.classList.add("has-items");
+    } else {
+      navBadge.classList.remove("has-items");
+    }
+  }
+
+  const badgeActive = document.getElementById("badge-active-events");
+  if (badgeActive) badgeActive.textContent = String(activeEvents.length);
+
+  const badgeBin = document.getElementById("badge-bin-events");
+  if (badgeBin) badgeBin.textContent = String(binEvents.length);
+}
+
+function initEventsManager() {
+  updateEventsBadges();
+  window.addEventListener("celebration_events_updated", updateEventsBadges);
+
+  const openBtn = document.getElementById("btn-open-events-bin");
+  const modal = document.getElementById("events-bin-modal");
+  const backdrop = document.getElementById("events-bin-backdrop");
+  const closeBtn = document.getElementById("btn-close-events-modal");
+
+  const tabActive = document.getElementById("tab-btn-active-events");
+  const tabBin = document.getElementById("tab-btn-bin-events");
+  const panelActive = document.getElementById("panel-active-events");
+  const panelBin = document.getElementById("panel-bin-events");
+
+  const btnCreateNew = document.getElementById("btn-modal-create-new");
+  const btnEmptyBin = document.getElementById("btn-modal-empty-bin");
+
+  // Open modal
+  openBtn?.addEventListener("click", () => {
+    openEventsModal("active");
+  });
+
+  // Close modal
+  closeBtn?.addEventListener("click", closeEventsModal);
+  backdrop?.addEventListener("click", closeEventsModal);
+
+  // Tab switching
+  tabActive?.addEventListener("click", () => switchEventsTab("active"));
+  tabBin?.addEventListener("click", () => switchEventsTab("bin"));
+
+  // Create new from modal
+  btnCreateNew?.addEventListener("click", () => {
+    closeEventsModal();
+    window.location.hash = "#planner-form";
+    const form = document.getElementById("event-form");
+    if (form) form.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // Empty bin
+  btnEmptyBin?.addEventListener("click", () => {
+    const bin = getBinEvents();
+    if (bin.length === 0) {
+      showToast("Recycle Bin is already empty.");
+      return;
+    }
+    if (window.confirm("Are you sure you want to permanently delete all events in the Recycle Bin? This action cannot be undone.")) {
+      emptyBin();
+      renderBinEventsList();
+      showToast("Recycle Bin emptied.");
+    }
+  });
+
+  // Delete confirmation modal setup
+  const confirmModal = document.getElementById("delete-confirm-modal");
+  const confirmBackdrop = document.getElementById("delete-confirm-backdrop");
+  const btnCancelDelete = document.getElementById("btn-cancel-delete");
+  const btnConfirmDelete = document.getElementById("btn-confirm-delete");
+
+  btnCancelDelete?.addEventListener("click", closeDeleteConfirmModal);
+  confirmBackdrop?.addEventListener("click", closeDeleteConfirmModal);
+
+  btnConfirmDelete?.addEventListener("click", () => {
+    if (!pendingDeletePlan) {
+      closeDeleteConfirmModal();
+      return;
+    }
+
+    const targetId = pendingDeletePlan._id || state.currentEventId;
+    const deletedEvent = moveToBin(targetId);
+    closeDeleteConfirmModal();
+
+    // Hide results section and reset view
+    const resultsSection = document.getElementById("results-section");
+    const chatBtn = document.getElementById("chat-trigger-btn");
+    const checklistsLink = document.getElementById("nav-link-checklists");
+
+    if (resultsSection) resultsSection.classList.add("hidden");
+    if (chatBtn) chatBtn.classList.add("hidden");
+    if (checklistsLink) checklistsLink.classList.add("hidden");
+
+    window.location.hash = "#planner-form";
+    const form = document.getElementById("event-form");
+    if (form) form.scrollIntoView({ behavior: "smooth" });
+
+    showToast("Event moved to Recycle Bin (safe for 30 days).", () => {
+      if (deletedEvent) {
+        const restored = restoreFromBin(deletedEvent.id, true);
+        if (restored && restored.plan) {
+          const resultsContainer = document.getElementById("results-container");
+          if (resultsContainer) {
+            renderResults(resultsContainer, restored.plan);
+            resultsSection?.classList.remove("hidden");
+            chatBtn?.classList.remove("hidden");
+            checklistsLink?.classList.remove("hidden");
+            triggerCelebrationConfetti();
+            showToast("Event restored successfully!");
+          }
+        }
+      }
+    });
+
+    pendingDeletePlan = null;
+  });
+
+  // Expose global delete requester for render.js
+  window.requestDeleteCurrentPlan = function (plan) {
+    pendingDeletePlan = plan;
+    const descEl = document.getElementById("delete-confirm-desc");
+    if (descEl && plan) {
+      const typeName = plan.event_type.charAt(0).toUpperCase() + plan.event_type.slice(1);
+      descEl.innerHTML = `Are you sure you want to delete <strong>${plan.city} ${typeName} Master Plan</strong>? It will be moved to your <strong>Recycle Bin</strong> and safely retained for <strong>30 days</strong> before permanent deletion.`;
+    }
+    confirmModal?.classList.remove("hidden");
+    confirmBackdrop?.classList.remove("hidden");
+  };
+}
+
+function openEventsModal(defaultTab = "active") {
+  const modal = document.getElementById("events-bin-modal");
+  const backdrop = document.getElementById("events-bin-backdrop");
+  modal?.classList.remove("hidden");
+  backdrop?.classList.remove("hidden");
+  switchEventsTab(defaultTab);
+}
+
+function closeEventsModal() {
+  const modal = document.getElementById("events-bin-modal");
+  const backdrop = document.getElementById("events-bin-backdrop");
+  modal?.classList.add("hidden");
+  backdrop?.classList.add("hidden");
+}
+
+function closeDeleteConfirmModal() {
+  const confirmModal = document.getElementById("delete-confirm-modal");
+  const confirmBackdrop = document.getElementById("delete-confirm-backdrop");
+  confirmModal?.classList.add("hidden");
+  confirmBackdrop?.classList.add("hidden");
+  pendingDeletePlan = null;
+}
+
+function switchEventsTab(tabKey) {
+  const tabActive = document.getElementById("tab-btn-active-events");
+  const tabBin = document.getElementById("tab-btn-bin-events");
+  const panelActive = document.getElementById("panel-active-events");
+  const panelBin = document.getElementById("panel-bin-events");
+
+  if (tabKey === "active") {
+    tabActive?.classList.add("is-active");
+    tabActive?.setAttribute("aria-selected", "true");
+    tabBin?.classList.remove("is-active");
+    tabBin?.setAttribute("aria-selected", "false");
+    panelActive?.classList.remove("hidden");
+    panelBin?.classList.add("hidden");
+    renderActiveEventsList();
+  } else {
+    tabBin?.classList.add("is-active");
+    tabBin?.setAttribute("aria-selected", "true");
+    tabActive?.classList.remove("is-active");
+    tabActive?.setAttribute("aria-selected", "false");
+    panelBin?.classList.remove("hidden");
+    panelActive?.classList.add("hidden");
+    renderBinEventsList();
+  }
+}
+
+function renderActiveEventsList() {
+  const container = document.getElementById("active-events-list");
+  if (!container) return;
+  const events = getSavedEvents();
+
+  if (events.length === 0) {
+    container.innerHTML = `
+      <div class="empty-events-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <p class="empty-title">No Active Plans Yet</p>
+        <p class="empty-sub">Fill out the planner form above to generate your first celebration plan.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = "";
+  events.forEach((ev) => {
+    const card = document.createElement("div");
+    card.className = "event-item-card";
+
+    const typeBadge = `<span class="event-type-pill pill-${ev.event_type || 'wedding'}">${ev.event_type || 'wedding'}</span>`;
+    const isCurrent = state.currentEventId === ev.id;
+
+    card.innerHTML = `
+      <div class="event-card-header">
+        <div class="event-card-title-row">
+          <h4 class="event-card-name">${ev.name}</h4>
+          ${typeBadge}
+          ${isCurrent ? '<span class="event-current-badge">Currently Viewing</span>' : ""}
+        </div>
+        <p class="event-card-meta">
+          <span>📅 ${ev.date || 'TBD'}</span> · 
+          <span>📍 ${ev.city || 'India'}</span> · 
+          <span>👥 ${ev.guest_count} Guests</span> · 
+          <span class="event-card-budget tabular-nums">${ev.total_budget_formatted}</span>
+        </p>
+      </div>
+      <div class="event-card-actions">
+        <button type="button" class="btn-primary btn-sm btn-open-plan">
+          <span>${isCurrent ? "View Current Plan" : "Open Plan"}</span>
+        </button>
+        <button type="button" class="btn-secondary btn-sm btn-bin-plan" title="Move to Recycle Bin">
+          ${ICONS.trash}<span>Move to Bin</span>
+        </button>
+      </div>
+    `;
+
+    // Open Plan button
+    card.querySelector(".btn-open-plan")?.addEventListener("click", () => {
+      if (ev.plan) {
+        state.currentPlan = ev.plan;
+        state.currentEventId = ev.id;
+        const resultsContainer = document.getElementById("results-container");
+        if (resultsContainer) {
+          renderResults(resultsContainer, ev.plan);
+          document.getElementById("results-section")?.classList.remove("hidden");
+          document.getElementById("chat-trigger-btn")?.classList.remove("hidden");
+          document.getElementById("nav-link-checklists")?.classList.remove("hidden");
+          document.getElementById("results-section")?.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+      closeEventsModal();
+    });
+
+    // Move to Bin button
+    card.querySelector(".btn-bin-plan")?.addEventListener("click", () => {
+      const deleted = moveToBin(ev.id);
+      renderActiveEventsList();
+      showToast(`Moved "${ev.name}" to Recycle Bin.`, () => {
+        if (deleted) {
+          restoreFromBin(deleted.id, false);
+          renderActiveEventsList();
+          showToast("Event restored!");
+        }
+      });
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function renderBinEventsList() {
+  const container = document.getElementById("bin-events-list");
+  if (!container) return;
+  const bin = getBinEvents();
+
+  if (bin.length === 0) {
+    container.innerHTML = `
+      <div class="empty-events-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <p class="empty-title">Recycle Bin is Empty</p>
+        <p class="empty-sub">When you delete an event, it will stay here for 30 days before being permanently removed.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = "";
+  bin.forEach((ev) => {
+    const daysLeft = getDaysRemainingInBin(ev.deletedAt);
+    const card = document.createElement("div");
+    card.className = "event-item-card is-deleted";
+
+    const daysText = daysLeft > 1 ? `${daysLeft} days left` : "Auto-deletes today";
+
+    card.innerHTML = `
+      <div class="event-card-header">
+        <div class="event-card-title-row">
+          <h4 class="event-card-name">${ev.name}</h4>
+          <span class="bin-expiry-pill">⏰ ${daysText}</span>
+        </div>
+        <p class="event-card-meta">
+          <span>📅 ${ev.date || 'TBD'}</span> · 
+          <span>📍 ${ev.city || 'India'}</span> · 
+          <span class="event-card-budget tabular-nums">${ev.total_budget_formatted}</span>
+        </p>
+      </div>
+      <div class="event-card-actions">
+        <button type="button" class="btn-secondary btn-sm btn-restore-plan" title="Restore back to Active Plans">
+          ${ICONS.restore}<span>Restore</span>
+        </button>
+        <button type="button" class="btn-secondary btn-sm btn-perm-delete btn-danger-text" title="Delete permanently right now">
+          <span>Delete Forever</span>
+        </button>
+      </div>
+    `;
+
+    // Restore button
+    card.querySelector(".btn-restore-plan")?.addEventListener("click", () => {
+      const restored = restoreFromBin(ev.id, true);
+      renderBinEventsList();
+      triggerCelebrationConfetti();
+      showToast(`Restored "${ev.name}" to Active Plans!`);
+
+      // If restored, show in results view
+      if (restored && restored.plan) {
+        const resultsContainer = document.getElementById("results-container");
+        if (resultsContainer) {
+          renderResults(resultsContainer, restored.plan);
+          document.getElementById("results-section")?.classList.remove("hidden");
+          document.getElementById("chat-trigger-btn")?.classList.remove("hidden");
+          document.getElementById("nav-link-checklists")?.classList.remove("hidden");
+        }
+      }
+    });
+
+    // Permanent delete button
+    card.querySelector(".btn-perm-delete")?.addEventListener("click", () => {
+      if (window.confirm(`Permanently erase "${ev.name}"? This cannot be restored.`)) {
+        deletePermanently(ev.id);
+        renderBinEventsList();
+        showToast("Event permanently deleted.");
+      }
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function showToast(message, undoAction = null, duration = 6500) {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = "toast-banner";
+  toast.setAttribute("role", "alert");
+
+  const msgSpan = document.createElement("span");
+  msgSpan.className = "toast-text";
+  msgSpan.textContent = message;
+  toast.appendChild(msgSpan);
+
+  if (undoAction && typeof undoAction === "function") {
+    const undoBtn = document.createElement("button");
+    undoBtn.type = "button";
+    undoBtn.className = "toast-undo-btn";
+    undoBtn.textContent = "Undo";
+    undoBtn.addEventListener("click", () => {
+      undoAction();
+      toast.remove();
+    });
+    toast.appendChild(undoBtn);
+  }
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "toast-close-btn";
+  closeBtn.setAttribute("aria-label", "Close notification");
+  closeBtn.innerHTML = `&times;`;
+  closeBtn.addEventListener("click", () => toast.remove());
+  toast.appendChild(closeBtn);
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("fade-out");
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
